@@ -1,21 +1,84 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Button, Platform, Text, View} from 'react-native';
+import * as nearAPI from "near-api-js";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    const [balance, setBalance] = useState()
+    useEffect(()=>{
+        (async function () {
+            window.near = await nearAPI.connect(config);
+            console.log('window.near',window.near);
+        })(window);
+    },[])
+
+    const {connect, keyStores, WalletConnection} = nearAPI;
+    const keyStore = new keyStores.BrowserLocalStorageKeyStore();
+    const config = {
+        networkId: "testnet",
+        keyStore, // optional if not signing transactions
+        nodeUrl: "https://rpc.testnet.near.org",
+        walletUrl: "https://wallet.testnet.near.org",
+        helperUrl: "https://helper.testnet.near.org",
+        explorerUrl: "https://explorer.testnet.near.org",
+    };
+
+
+    const signIn = async () => {
+        let near
+        if (Platform==='Android') {
+            console.log('hello')
+        }else {
+            near = connect(config);
+            const wallet = new WalletConnection(await near, 'testnet');
+            await wallet.requestSignIn(
+                "vadymtest.testnet", // contract requesting access
+                "http://localhost:19006", // optional
+                "http://localhost:19006/" // optional
+            )
+        }
+
+    };
+    const signOut = async () => {
+        const near = connect(config);
+        const wallet = new WalletConnection(await near, 'testnet');
+        setBalance(null)
+        wallet.signOut();
+    };
+    const getInfo = async () => {
+        const near = connect(config);
+        const wallet = new WalletConnection(await near, 'testnet');
+        if (wallet.isSignedIn()) {
+            const walletAccountId = await wallet.getAccountId();
+            const walletAccountObj = await wallet.account();
+            const account = await (await near).account(walletAccountId);
+            await account.getAccountBalance().then((a) => {
+                setBalance(a)
+            })
+            console.log('walletAccountId', walletAccountId);
+            console.log('walletAccountObj', walletAccountObj);
+        }
+    };
+
+
+    return (
+        <View>
+
+            <Button
+                onPress={signIn}
+                title="SignIn"/>
+
+            <Button
+                onPress={signOut}
+                title="SignOut"/>
+            <Button
+                onPress={getInfo}
+                title="getInfo"/>
+            {
+                balance
+                    ? <Text>balance : {balance.total} yahoo</Text>
+                    : null
+            }
+        </View>
+    )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
