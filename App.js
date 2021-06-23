@@ -4,29 +4,45 @@ import * as nearAPI from "near-api-js";
 
 export default function App() {
     const [balance, setBalance] = useState()
-    useEffect(()=>{
-        (async function () {
-            window.near = await nearAPI.connect(config);
-            console.log('window.near',window.near);
-        })(window);
-    },[])
-
     const {connect, keyStores, WalletConnection} = nearAPI;
-    const keyStore = new keyStores.BrowserLocalStorageKeyStore();
-    const config = {
-        networkId: "testnet",
-        keyStore, // optional if not signing transactions
-        nodeUrl: "https://rpc.testnet.near.org",
-        walletUrl: "https://wallet.testnet.near.org",
-        helperUrl: "https://helper.testnet.near.org",
-        explorerUrl: "https://explorer.testnet.near.org",
-    };
+    let keyStore, config
+
+    useEffect(()=>{
+        if (Platform === 'Android'){
+
+        }else if (Platform === 'IOS'){
+
+        }else {
+            (async function () {
+                window.near = await nearAPI.connect(config);
+                console.log('window.near',window.near);
+            })(window);
+        }
+    },[])
+    if (Platform === 'Android'){
+
+    }else if (Platform === 'IOS'){
+
+    }else {
+       keyStore = new keyStores.BrowserLocalStorageKeyStore();
+         config = {
+            networkId: "testnet",
+            keyStore, // optional if not signing transactions
+            nodeUrl: "https://rpc.testnet.near.org",
+            walletUrl: "https://wallet.testnet.near.org",
+            helperUrl: "https://helper.testnet.near.org",
+            explorerUrl: "https://explorer.testnet.near.org",
+        };
+    }
 
 
     const signIn = async () => {
         let near
-        if (Platform==='Android') {
-            console.log('hello')
+        if (Platform ==='Android') {
+            console.log('hello Android')
+        }else if (Platform === 'IOS'){
+            console.log('hello IOS')
+
         }else {
             near = connect(config);
             const wallet = new WalletConnection(await near, 'testnet');
