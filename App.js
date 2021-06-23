@@ -1,15 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {Button, Platform, Text, View} from 'react-native';
 import * as nearAPI from "near-api-js";
 
 export default function App() {
     const [balance, setBalance] = useState()
+    const [accountId, setAccountId] = useState()
     const {connect, keyStores, WalletConnection} = nearAPI;
     let keyStore, config
 
-    if (Platform === 'Android'){
-
-    }else if (Platform === 'IOS'){
+    if (Platform === 'Android') {
         config = {
             networkId: "testnet",
             nodeUrl: "https://rpc.testnet.near.org",
@@ -17,9 +16,15 @@ export default function App() {
             helperUrl: "https://helper.testnet.near.org",
             explorerUrl: "https://explorer.testnet.near.org",
         };
-    }else {
-       keyStore = new keyStores.BrowserLocalStorageKeyStore();
-         config = {
+        console.log('android');
+
+    } else if (Platform === 'IOS') {
+        console.log('ios');
+    } else if (window !== undefined) {
+        console.log('web');
+
+        keyStore = new keyStores.BrowserLocalStorageKeyStore();
+        config = {
             networkId: "testnet",
             keyStore, // optional if not signing transactions
             nodeUrl: "https://rpc.testnet.near.org",
@@ -31,33 +36,19 @@ export default function App() {
 
 
     const signIn = async () => {
-        let near
-        if (Platform ==='Android') {
-            near = connect(config);
-            const wallet = new WalletConnection(await near, 'testnet');
-            await wallet.requestSignIn(
-                "vadymtest.testnet", // contract requesting access
-                "http://localhost:19006", // optional
-                "http://localhost:19006/" // optional
-            )
-        }else if (Platform === 'IOS'){
-            console.log('hello IOS')
-
-        }else {
-            near = connect(config);
-            const wallet = new WalletConnection(await near, 'testnet');
-            await wallet.requestSignIn(
-                "vadymtest.testnet", // contract requesting access
-                "http://localhost:19006", // optional
-                "http://localhost:19006/" // optional
-            )
-        }
-
+        const near = connect(config);
+        const wallet = new WalletConnection(await near, 'testnet');
+        await wallet.requestSignIn(
+            "vadymtest.testnet", // contract requesting access
+            "http://localhost:19006", // optional
+            "http://localhost:19006/" // optional
+        )
     };
     const signOut = async () => {
         const near = connect(config);
         const wallet = new WalletConnection(await near, 'testnet');
         setBalance(null)
+        setAccountId(null)
         wallet.signOut();
     };
     const getInfo = async () => {
@@ -65,13 +56,12 @@ export default function App() {
         const wallet = new WalletConnection(await near, 'testnet');
         if (wallet.isSignedIn()) {
             const walletAccountId = await wallet.getAccountId();
-            const walletAccountObj = await wallet.account();
+            setAccountId(walletAccountId)
             const account = await (await near).account(walletAccountId);
             await account.getAccountBalance().then((a) => {
                 setBalance(a)
             })
             console.log('walletAccountId', walletAccountId);
-            console.log('walletAccountObj', walletAccountObj);
         }
     };
 
@@ -92,6 +82,11 @@ export default function App() {
             {
                 balance
                     ? <Text>balance : {balance.total} yahoo</Text>
+                    : null
+            }
+            {
+                accountId
+                    ? <Text>AccountId : {accountId} </Text>
                     : null
             }
         </View>
