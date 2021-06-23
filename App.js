@@ -7,22 +7,16 @@ export default function App() {
     const {connect, keyStores, WalletConnection} = nearAPI;
     let keyStore, config
 
-    useEffect(()=>{
-        if (Platform === 'Android'){
-
-        }else if (Platform === 'IOS'){
-
-        }else {
-            (async function () {
-                window.near = await nearAPI.connect(config);
-                console.log('window.near',window.near);
-            })(window);
-        }
-    },[])
     if (Platform === 'Android'){
 
     }else if (Platform === 'IOS'){
-
+        config = {
+            networkId: "testnet",
+            nodeUrl: "https://rpc.testnet.near.org",
+            walletUrl: "https://wallet.testnet.near.org",
+            helperUrl: "https://helper.testnet.near.org",
+            explorerUrl: "https://explorer.testnet.near.org",
+        };
     }else {
        keyStore = new keyStores.BrowserLocalStorageKeyStore();
          config = {
@@ -39,7 +33,13 @@ export default function App() {
     const signIn = async () => {
         let near
         if (Platform ==='Android') {
-            console.log('hello Android')
+            near = connect(config);
+            const wallet = new WalletConnection(await near, 'testnet');
+            await wallet.requestSignIn(
+                "vadymtest.testnet", // contract requesting access
+                "http://localhost:19006", // optional
+                "http://localhost:19006/" // optional
+            )
         }else if (Platform === 'IOS'){
             console.log('hello IOS')
 
